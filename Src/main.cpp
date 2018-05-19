@@ -200,13 +200,13 @@ void SystemClock_Config(void)
 	/**Initializes the CPU, AHB and APB busses clocks
 	 */
 	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_LSE;
-	RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-	RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
-	RCC_OscInitStruct.LSEState = RCC_LSE_OFF;
-	RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+	RCC_OscInitStruct.HSEState = RCC_HSE_ON; // Habilito  HSE 8MHz
+	RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1; // 8/1
+	RCC_OscInitStruct.LSEState = RCC_LSE_OFF; // Não habilito o LSE
+	RCC_OscInitStruct.HSIState = RCC_HSI_ON; //Habilito HSI
 	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-	RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE; // Defino a fonte do PLL como HSE
+	RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9; 	// 8x9= 72MHZ
 	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
 	{
 		_Error_Handler(__FILE__, __LINE__);
@@ -215,11 +215,11 @@ void SystemClock_Config(void)
 	/**Initializes the CPU, AHB and APB busses clocks
 	 */
 	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-			|RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+			|RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2; // Configuro HCLK, SYSCLK, PCLK1 e PCLK2
+	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK; 	// fonte do sysclock é PLLCLK( 72MHZ)
+	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1; // 72MHZ
+	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2; //36MHZ
+	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;	//72MHZ
 
 	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
 	{
@@ -319,14 +319,14 @@ static void MX_SPI2_Init(void)
 
 	/* SPI2 parameter configuration*/
 	hspi2.Instance = SPI2;
-	hspi2.Init.Mode = SPI_MODE_MASTER;
-	hspi2.Init.Direction = SPI_DIRECTION_2LINES;
-	hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
-	hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
-	hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+	hspi2.Init.Mode = SPI_MODE_MASTER;	// Configuro microcontrolador como master
+	hspi2.Init.Direction = SPI_DIRECTION_2LINES;	// Modo full duplex
+	hspi2.Init.DataSize = SPI_DATASIZE_8BIT;	// Tamanho dos dados à transferir
+	hspi2.Init.CLKPolarity = SPI_POLARITY_LOW; // Polaridade: nível em que começa o clock é baixo
+	hspi2.Init.CLKPhase = SPI_PHASE_1EDGE; // Fase : amostragem na primeira borda
 	hspi2.Init.NSS = SPI_NSS_SOFT;
-	hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4; // para Freq< 10 Mhz
-	hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
+	hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4; // para Freq< 10 Mhz (36/4)=9MHz -> APBI é a fonte
+	hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB; // primeiro o bit mais significativo na transferência
 	hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
 	hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
 	hspi2.Init.CRCPolynomial = 10;
@@ -565,6 +565,10 @@ static void MX_GPIO_Init(void)
 	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = GPIO_PULLUP;
 	HAL_GPIO_Init(SPI2_IRQN_GPIO_Port, &GPIO_InitStruct);
+
+	// Configuro os GPIOs do SPI como:
+	//NSS-> Output push-pull, speed high
+	//IRQN-> Input, com pull-up
 
 }
 
