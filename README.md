@@ -19,14 +19,13 @@ Uma maneira eficiente de transmitir dados diferentes de um mesmo transmissor par
 A comunicação entre o rádio e o microcontrolador é através do protocolo SPI, usando o periférico SPI do microcontrolador. O código para a recepção ou envio de dados é executado em uma task default de um firmmware com FreeRTOS.
 
 ##### Diagrama de Blocos da eletrônica:
-#
+
 
 ![Diagrama de Blocos](blocos.png)
 
 
 ##### Pinagem:
-#
-#
+Tabela com os pinos correspondentes no microcontrolador.
 | Pino | STM32F103 |
 |:----:|:---------:|
 | NIRQ |    PA10   |
@@ -37,7 +36,8 @@ A comunicação entre o rádio e o microcontrolador é através do protocolo SPI
 |  SCK |    PB13   |
 
 ##### Fluxograma do Firmware:
-#
+
+
 ![Fluxograma](fluxograma.png)
 
 ### Documentação das funções e classes
@@ -63,13 +63,13 @@ Classe que trata do interfaceamento com o nrf24, herda a classe anterior. Tem co
 Alguns métodos são importantes e valem a apresentação:
 * NRF24L01P::InterruptCallback(): trata os procedimentos após uma ativação, em níve baixo, do NIRQ. Verifica que condição está:  Se Data ready para leitura ou RX FIFO não vazio,Data sent ou TX vazio com busy=1 (transmissão), TX FULL e finaliza um ciclo de transmissão ou recepção ;
 *  NRF24L01P::StartRX_ESB(uint8_t channel, uint64_t address, uint16_t size, uint8_t en_auto_ack): configurações de recepção;
-*  NRF24L01P::Config(): configurações gerais;
+*  NRF24L01P::Config(): configurações gerais dos registradores, ajustando modos e preferências;
 * NRF24L01P::Init(): inicialização, ou reset do nrf;
 
-Existem ainda os métodos de write e read para SPI, que enviam comandos e fazem leitura dos registradores do nrf24.
+Existem ainda os métodos de write e read para SPI, que enviam comandos e fazem leitura dos registradores do nrf24. Mais informações sobre outras funções estão comentadas no código.
 
 ### Vídeo do projeto
-#
+Vídeo no Youtube:
 [![IMAGE ALT TEXT HERE](http://img.youtube.com/vi/9gLmRpooCuw/0.jpg)](https://www.youtube.com/watch?v=9gLmRpooCuw)
 
 
@@ -81,7 +81,7 @@ Existem ainda os métodos de write e read para SPI, que enviam comandos e fazem 
 
 * Firmware da equipe SSL da RoboIME
 
-* Cap Reanult
+* Cap Renault
 
 * Al Onias 
 
