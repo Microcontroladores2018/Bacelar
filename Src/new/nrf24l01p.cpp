@@ -365,10 +365,11 @@ void NRF24L01P::InterruptCallback(){
 //	static uint32_t led_c_time=0;
 //	static uint32_t led_d_time=0;
 
+	// NIRQ é ativada em nível baixo quando dado pronto para leitura ou dado enviado
 	if(!_NIRQ_PIN->Read()){
 		REG.STATUS.value=nop();
 		REG.FIFO_STATUS.value=read_register(REG_ADDR.FIFO_STATUS);
-		if(REG.STATUS.MAX_RT){
+		if(REG.STATUS.MAX_RT){   // Se máximo número de retransmissão foi atingido
 			flush_tx();
 			REG.STATUS.value=0;
 			REG.STATUS.MAX_RT=1; // 1 para clear habilita
@@ -379,7 +380,7 @@ void NRF24L01P::InterruptCallback(){
 			//led_c.On();
 //			led_c_time=GetLocalTime();
 		}
-		if(REG.STATUS.RX_DR||(!REG.FIFO_STATUS.RX_EMPTY)){
+		if(REG.STATUS.RX_DR||(!REG.FIFO_STATUS.RX_EMPTY)){ // Se Data ready para leitura ou RX FIFO não vazio
 			_receive_irq_count++;
 			uint8_t payloadsize=read_rx_payload_width();
 			if(payloadsize>32) {
@@ -400,7 +401,7 @@ void NRF24L01P::InterruptCallback(){
 			}
 			REG.STATUS.value=nop();
 		}
-		if(REG.STATUS.TX_DS||(REG.FIFO_STATUS.TX_EMPTY&&(_busy==1))){
+		if(REG.STATUS.TX_DS||(REG.FIFO_STATUS.TX_EMPTY&&(_busy==1))){  // Data sent ou TX vazio com busy=1 (transmissão)
 			_transmit_irq_count++;
 			_CE_PIN->Reset();
 			if(REG.STATUS.RX_DR){
@@ -413,7 +414,7 @@ void NRF24L01P::InterruptCallback(){
 			//led_a.On();
 //			led_a_time=GetLocalTime();
 		}
-		if(REG.STATUS.TX_FULL||REG.FIFO_STATUS.TX_FULL){
+		if(REG.STATUS.TX_FULL||REG.FIFO_STATUS.TX_FULL){   //	TX FULL
 			flush_tx();
 			REG.STATUS.value=nop();
 			_busy=0;

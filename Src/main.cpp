@@ -236,14 +236,14 @@ void SystemClock_Config(void)
 
 	/**Configure the Systick interrupt time
 	 */
-	HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
+	HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000); // Configura a interrupção do Systick a cada 72000 ticks -> 1ms
 
 	/**Configure the Systick
 	 */
-	HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
+	HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);  // Configuro a fonte do systick como HCLK
 
 	/* SysTick_IRQn interrupt configuration */
-	HAL_NVIC_SetPriority(SysTick_IRQn, 15, 0);
+	HAL_NVIC_SetPriority(SysTick_IRQn, 15, 0); // Configuração da interrupção , prioridade 15 e subprioridade 0
 
 
 }
@@ -577,6 +577,8 @@ static void MX_GPIO_Init(void)
 /* USER CODE END 4 */
 
 
+// FUNÇÕES PARA PROTOBUFF
+
 bool pb_circularbuffer_read(pb_istream_t *stream, pb_byte_t *buf, size_t count){
 	bool result=false;
 	CircularBuffer<uint8_t> *circularbuffer=(CircularBuffer<uint8_t> *)(stream->state);
@@ -611,31 +613,37 @@ pb_istream_t pb_istream_from_circularbuffer(CircularBuffer<uint8_t> *circularbuf
 	return stream;
 }
 
-uint8_t id=10;  //ID
-uint8_t channel=92;
-uint64_t address=0xE7E7E7E700;
+
+// Parâmetros e constantes:
+
+uint8_t id=10;  //ID ,é somado ao endereço base do receptor, funciona como pipe do NRF24
+uint8_t channel=92; // canal 92, determina a frequencia central do canal, no caso 92Mhz.
+uint64_t address=0xE7E7E7E700; // endereço base do recepetor
 uint32_t last_packet_ms = 0;
-bool controlbit=false;
+bool controlbit=false; //
+// variáveis que armazenam os dados já decodificados pelo protobuff em uma struct
 grSim_Robot_Command robotcmd;
 grSim_Robot_Command robotcmd_test;
+// variáveis que irão salvar os valores recebidos do nrf24
 static float velocidade_des0 =0;
-static float velocidade_des1 =0;//.188495;
+static float velocidade_des1 =0;
 
+//FUNÇÕES PARA RECEPÇÃO E DECODIFICAÇÃO:
+
+
+// Pós decodificação de protobuff , armazena nas variáveis desejadas os dados vindos do nrf
 
 void processPacket(){
 	//	robo.set_speed(robotcmd.veltangent, robotcmd.velnormal, robotcmd.velangular);
 	velocidade_des0=robotcmd.veltangent;
 	velocidade_des1=robotcmd.velnormal;
-	HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-	//	if(robotcmd.kickspeedx!=0)
-	//		robo.ChuteBaixo(robotcmd.kickspeedx);
-	//	if(robotcmd.kickspeedz!=0)
-	//		robo.HighKick(robotcmd.kickspeedz);
-	//	if(robotcmd.spinner)
-	//		robo.drible->Set_Vel(660);
-	//	else
-	//		robo.drible->Set_Vel(0);
+	HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin); // Pisco o LED caso ocorra recepção e passagem de parâmetros para as variáveis desejadas
+
 }
+
+
+
+// Função de Recepção dos dados do nrf24
 
 void interruptReceive(NRF24L01P *_nrf24){
 	bool status=0;
@@ -673,15 +681,21 @@ void StartDefaultTask(void const * argument)
 	/* Infinite loop */
 	osDelay(2000);
 
+	// Set e Reset dos pinos GPIO para controle da ponte H
+
 	HAL_GPIO_WritePin(M0_MAH_GPIO_Port, M0_MAH_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(M0_MBH_GPIO_Port, M0_MBH_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(M1_MAH_GPIO_Port, M1_MAH_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(M1_MBH_GPIO_Port, M1_MBH_Pin, GPIO_PIN_SET);
 
+	// Inicia os sinais PWM para a ponte H
+
 	HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_3);
 	HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_4);
 	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_2);
+
+	// Inicia a contagem nos timers para os dois encoderes
 
 	HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 	HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
@@ -691,53 +705,70 @@ void StartDefaultTask(void const * argument)
 
 	int a=0;
 
-	//Declarações--
+	//Declarações de objetos da classe IO_Pin, SPI_STM32 e NRF24L01P
+
 	IO_Pin_STM32 nrf_nss(IO_Pin::IO_Pin_Mode_OUT, SPI2_NSS_GPIO_Port, SPI2_NSS_Pin);
 	IO_Pin_STM32 nrf_ce(IO_Pin::IO_Pin_Mode_OUT,SPI2_CE_GPIO_Port,SPI2_CE_Pin);
 	IO_Pin_STM32 nrf_irqn(IO_Pin::IO_Pin_Mode_IN, SPI2_IRQN_GPIO_Port,SPI2_IRQN_Pin);
 	SPI_STM32 spinrf(hspi2, nrf_nss);
 	NRF24L01P nrf(spinrf,nrf_nss,nrf_ce,nrf_irqn);
-	//  Robo robo(nrf,id);
-	a=nrf.SelfTest();
+	//a=nrf.SelfTest(); -> teste para leitura do status, verifico se SPI está OK.
+
+
+	// Inicializa o nrf
+
 	nrf.Init();
+
+	// Configura os registradores para o uso geral desejado
+
 	nrf.Config(); // configurações : DPL OK, ACK OK, ACK_NOT OK, POWER UP OK
+
+	// Configurações de recepção com ENHANCED SHOCKBURST
+
 	nrf.StartRX_ESB(channel, address + id, 32, 1);
+
+	// Configurações de transmissão , não é usada no momento, só está configurado
+
 	nrf.TxPackage_ESB(channel, address + id, 0,(uint8_t*) "TESTE", 5);
+
 	while(nrf.Busy()){
-		nrf.InterruptCallback();
+		nrf.InterruptCallback(); // espera o fim da transmissão teste
 	}
+
+	// Reconfigura no modo de recepção
+
 	nrf.StartRX_ESB(channel, address + id, 32, 1);
 	////////////////////////////////////////////
 
 
 
+//
+//	TESTE
+//
+//	  a=nrf.SelfTest();
+//	  nrf.TxReady();
+//	  a=nrf.SelfTest();
 
-	//TESTE
-
-	//  a=nrf.SelfTest();
-	//  nrf.TxReady();
-	//  a=nrf.SelfTest();
-
-
-	for(;;)/*Não entendi direito*/
+// LOOP INFINITO DA TASK:
+	for(;;)
 	{
-		//    osDelay(500);
-		//  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-		nrf.InterruptCallback();
+		nrf.InterruptCallback(); // trata a recepção dos pacotes, ativado pelas interrupções em nível baixo do NIRQ
 		if(nrf.RxSize()){
-			interruptReceive(&nrf);
+			interruptReceive(&nrf); // Decodifica os pacotes recebidos e atribui às variáveis desejadas os parâmetros lidos
 			//robo.interruptAckPayload();
 			last_packet_ms = GetLocalTime();
-			controlbit = true;
+			controlbit = true; // controlbit é utilizado para garantir que os valores corretos são usados no controle
 		}
-		if((GetLocalTime()-last_packet_ms)>100){
-			controlbit = false;
+		if((GetLocalTime()-last_packet_ms)>100){ // se fico sem receber por 100 ms ou mais
+			controlbit = false;  // não realizo o controle com o valor repetido, ou errado
 		}
-		/////
+
 	}
 	/* USER CODE END 5 */
 }
 
+
+// CONTROLE DE VELOCIDADE DAS RODAS
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
