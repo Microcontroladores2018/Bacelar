@@ -26,6 +26,7 @@ A comunicação entre o rádio e o microcontrolador é através do protocolo SPI
 
 ##### Pinagem:
 Tabela com os pinos correspondentes no microcontrolador.
+
 | Pino | STM32F103 |
 |:----:|:---------:|
 | NIRQ |    PA10   |
