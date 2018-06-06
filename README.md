@@ -69,7 +69,7 @@ Alguns métodos são importantes e valem a apresentação:
 Existem ainda os métodos de write e read para SPI, que enviam comandos e fazem leitura dos registradores do nrf24. Mais informações sobre outras funções estão comentadas no código.
 
 ### Vídeo do projeto
-Vídeo no Youtube:
+
 [![IMAGE ALT TEXT HERE](http://img.youtube.com/vi/9gLmRpooCuw/0.jpg)](https://www.youtube.com/watch?v=9gLmRpooCuw)
 
 
